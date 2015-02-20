@@ -3,6 +3,9 @@
 #include "AppFactory.h"
 #include "ModulesApp.h"
 
+// UserObjects
+#include "MonteCarloUserObject.h"
+
 template<>
 InputParameters validParams<KinesisApp>()
 {
@@ -41,6 +44,7 @@ KinesisApp::registerApps()
 void
 KinesisApp::registerObjects(Factory & factory)
 {
+  registerUserObject(MonteCarloUserObject);
 }
 
 void
