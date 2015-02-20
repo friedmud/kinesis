@@ -1,10 +1,10 @@
-#include "StorkApp.h"
+#include "KinesisApp.h"
 #include "Moose.h"
 #include "AppFactory.h"
 #include "ModulesApp.h"
 
 template<>
-InputParameters validParams<StorkApp>()
+InputParameters validParams<KinesisApp>()
 {
   InputParameters params = validParams<MooseApp>();
 
@@ -13,37 +13,37 @@ InputParameters validParams<StorkApp>()
   return params;
 }
 
-StorkApp::StorkApp(const std::string & name, InputParameters parameters) :
+KinesisApp::KinesisApp(const std::string & name, InputParameters parameters) :
     MooseApp(name, parameters)
 {
   srand(processor_id());
 
   Moose::registerObjects(_factory);
   ModulesApp::registerObjects(_factory);
-  StorkApp::registerObjects(_factory);
+  KinesisApp::registerObjects(_factory);
 
   Moose::associateSyntax(_syntax, _action_factory);
   ModulesApp::associateSyntax(_syntax, _action_factory);
-  StorkApp::associateSyntax(_syntax, _action_factory);
+  KinesisApp::associateSyntax(_syntax, _action_factory);
 }
 
-StorkApp::~StorkApp()
+KinesisApp::~KinesisApp()
 {
 }
 
-extern "C" void StorkApp__registerApps() { StorkApp::registerApps(); }
+extern "C" void KinesisApp__registerApps() { KinesisApp::registerApps(); }
 void
-StorkApp::registerApps()
+KinesisApp::registerApps()
 {
-  registerApp(StorkApp);
+  registerApp(KinesisApp);
 }
 
 void
-StorkApp::registerObjects(Factory & factory)
+KinesisApp::registerObjects(Factory & factory)
 {
 }
 
 void
-StorkApp::associateSyntax(Syntax & syntax, ActionFactory & action_factory)
+KinesisApp::associateSyntax(Syntax & syntax, ActionFactory & action_factory)
 {
 }
