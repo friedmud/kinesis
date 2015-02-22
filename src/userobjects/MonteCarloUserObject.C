@@ -113,6 +113,9 @@ MonteCarloUserObject::execute()
   {
     MonteCarloParticle particle(i);
 
+    // Reset counters
+    _tally_grid.beginHistory();
+
     // Determine a starting position
     Real starting_x = (particle.nextRand() * _source_subdomain_size) + _source_subdomain_beginning;
 
@@ -217,13 +220,15 @@ MonteCarloUserObject::execute()
           mooseError("Invalid reaction type!");
       }
     }
+
+    _tally_grid.endHistory();
   }
+
+  _tally_grid.finalize();
 
   auto t2 = std::chrono::high_resolution_clock::now();
 
   std::cout<<"Histories per second: "<<(Real)_num_particles / std::chrono::duration_cast<std::chrono::seconds>(t2-t1).count()<<std::endl;
-
-  _tally_grid.finalize();
 }
 
 

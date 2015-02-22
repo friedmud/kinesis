@@ -36,12 +36,12 @@
   [./monte_carlo]
     type = MonteCarloUserObject
     execute_on = initial
-    num_particles = 400000000
+    num_particles = 10000000
     sigma_t = '1 1.5'
     boundaries = '0 2 6'
     source_subdomain = 0
     sigma_a = '0.5 1.2'
-    bins = 100
+    bins = 1000
   [../]
 []
 
