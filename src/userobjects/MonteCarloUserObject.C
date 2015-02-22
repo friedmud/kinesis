@@ -3,10 +3,14 @@
 // Kinesis
 #include "MonteCarloParticle.h"
 #include "PlanarMonteCarloBoundary.h"
+#include "ProbabilityMassFunction.h"
 
 // Moose
 #include "Executioner.h"
 #include "MooseError.h"
+
+// System
+#include <chrono>
 
 template<>
 InputParameters validParams<MonteCarloUserObject>()
@@ -17,6 +21,7 @@ InputParameters validParams<MonteCarloUserObject>()
   params.addRequiredParam<std::vector<Real> >("boundaries", "Edges of slabs: beginning of slab1, beginning of slab2, end of slab2");
   params.addRequiredParam<std::vector<Real> >("sigma_t", "Total cross section of each slab: slab1, slab2");
   params.addRequiredParam<std::vector<Real> >("sigma_a", "Absorption cross section of each slab: slab1, slab2");
+  params.addRequiredParam<unsigned int>("source_subdomain", "The subdomain (starting at 0) containing the source");
 
   return params;
 }
@@ -26,13 +31,16 @@ MonteCarloUserObject::MonteCarloUserObject(const std::string & name, InputParame
     _num_particles(getParam<unsigned int>("num_particles")),
     _boundaries(getParam<std::vector<Real> >("boundaries")),
     _num_boundaries(_boundaries.size()),
+    _num_subdomains(_num_boundaries - 1),
     _monte_carlo_boundaries(_num_boundaries),
     _subdomain_boundaries(_num_boundaries - 1),
     _sigma_t(getParam<std::vector<Real> >("sigma_t")),
-    _sigma_a(getParam<std::vector<Real> >("sigma_a"))
+    _sigma_a(getParam<std::vector<Real> >("sigma_a")),
+    _subdomain_reaction_pmfs(_num_subdomains),
+    _source_subdomain(getParam<unsigned int>("source_subdomain")),
+    _source_subdomain_size(0),
+    _source_subdomain_beginning(0)
 {
-  std::cout<<"Here!"<<std::endl;
-
   // Build boundary objects
   Point normal(1,0,0);
   for (unsigned int i=0; i<_num_boundaries; i++)
@@ -56,18 +64,43 @@ MonteCarloUserObject::MonteCarloUserObject(const std::string & name, InputParame
       _subdomain_boundaries[connected_subdomains[j]].push_back(boundary);
   }
 
-  std::cout<<"Here Again!"<<std::endl;
+
+  // Build reaction probability mass functions for each subdomain
+  for (unsigned int i=0; i<_num_subdomains; i++)
+  {
+    // 2 because we only have two possible reactions: collision and absorption
+    std::vector<Real> raw_probs(2);
+
+    // Collision: 0
+    raw_probs[0] = _sigma_t[i] - _sigma_a[i];
+
+    // Absorption: 1
+    raw_probs[1] = _sigma_a[i];
+
+    ProbabilityMassFunction * pmf = new ProbabilityMassFunction(raw_probs);
+
+    _subdomain_reaction_pmfs[i] = pmf;
+  }
+
+  // Cache some values for determing the starting position of particle
+  _source_subdomain_size = _boundaries[_source_subdomain+1] - _boundaries[_source_subdomain];
+  _source_subdomain_beginning = _boundaries[_source_subdomain];
 }
 
 MonteCarloUserObject::~MonteCarloUserObject()
 {
   for (unsigned int i=0; i<_monte_carlo_boundaries.size(); i++)
     delete _monte_carlo_boundaries[i];
+
+  for (unsigned int i=0; i<_subdomain_reaction_pmfs.size(); i++)
+    delete _subdomain_reaction_pmfs[i];
 }
 
 void
 MonteCarloUserObject::execute()
 {
+  auto t1 = std::chrono::high_resolution_clock::now();
+
   // Make this out here and just reuse it a bunch so that it doesn't need to get created and destroyed
   Point new_position;
   Point new_direction;
@@ -77,7 +110,10 @@ MonteCarloUserObject::execute()
   {
     MonteCarloParticle particle(i);
 
-    particle.setPosition(Point(0,0,0));
+    // Determine a starting position
+    Real starting_x = (particle.nextRand() * _source_subdomain_size) + _source_subdomain_beginning;
+
+    particle.setPosition(Point(starting_x, 0, 0));
 
     particle.setCurrentSubdomain(subdomainContainingPoint(particle.position()));
 
@@ -100,25 +136,12 @@ MonteCarloUserObject::execute()
 
         // Build a unit vector in the new direction
         // From Forrest Brown's Monte Carlo notes slide 5-10 (page 176)
-        /*
         new_direction(0) = mu;
         new_direction(1) = sqrt_one_minus_mu2 * std::cos(phi);
         new_direction(2) = sqrt_one_minus_mu2 * std::sin(phi);
-        */
-
-        new_direction(0) = 1.0/std::sqrt(2);
-        new_direction(1) = 1.0/std::sqrt(2);
-        new_direction(2) = 0;
       }
       else
-      {
-        std::cout<<"Using old direction!"<<std::endl;
         new_direction = particle.direction();
-      }
-
-      distance = std::sqrt(2);
-
-      std::cout<<"New direction: "<<new_direction<<std::endl;
 
       // Start building up the new position
       new_position = particle.position();
@@ -126,18 +149,12 @@ MonteCarloUserObject::execute()
       // Compute the new position
       new_position.add_scaled(new_direction, distance);
 
-      std::cout<<"New position: "<<new_position<<std::endl;
-
       SubdomainID current_subdomain = particle.currentSubdomain();
       SubdomainID new_subdomain = subdomainContainingPoint(new_position);
-
-      std::cout<<"Subdomains: "<<current_subdomain<<" "<<new_subdomain<<std::endl;
 
       // Did we cross a boundary?
       if (new_subdomain != current_subdomain)
       {
-        std::cout<<"Crossed boundary!"<<std::endl;
-
         // Create a LineSegment for the path we were trying to take
         LineSegment path(particle.position(), new_position);
 
@@ -155,8 +172,6 @@ MonteCarloUserObject::execute()
 
           if (intersected)
           {
-            std::cout<<"Setting intersection point to: "<<boundary_intersection<<std::endl;
-
             // Move the particle to the intersection point
             particle.setPosition(boundary_intersection);
 
@@ -176,26 +191,32 @@ MonteCarloUserObject::execute()
         // This can happen due to floating point tolerances.  Just keep the particle in
         // the current subdomain and update its position
         if (!intersected)
-        {
-          std::cout<<"Weird!"<<std::endl;
           particle.setPosition(new_position);
-        }
-      }
-      else
-      {
-        particle.setPosition(new_position);
 
-        particle.setIntersectedBoundary(false);
+        // Leakage
+        if (particle.currentSubdomain() == Moose::INVALID_BLOCK_ID)
+          break;
       }
-
-      // Leakage
-      if (particle.currentSubdomain() == Moose::INVALID_BLOCK_ID)
+      else // Didn't cross a boundary so let's see if we had a reaction...
       {
-        std::cout<<"Leaked!"<<std::endl;
-        break;
+        particle.setPosition(new_position); // Update the particle position
+
+        particle.setIntersectedBoundary(false); // We didn't cross a boundary
+
+        // Determine reaction
+        unsigned int reaction = _subdomain_reaction_pmfs[particle.currentSubdomain()]->getEvent(particle.nextRand());
+
+        // 0 is Collision... and we don't need to do anything
+
+        if (reaction == 1) // Absorption is 1
+          break;
       }
     }
   }
+
+  auto t2 = std::chrono::high_resolution_clock::now();
+
+  std::cout<<"Histories per second: "<<(Real)_num_particles / std::chrono::duration_cast<std::chrono::seconds>(t2-t1).count()<<std::endl;
 }
 
 

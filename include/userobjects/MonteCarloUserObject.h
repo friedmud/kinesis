@@ -8,6 +8,7 @@
 class MonteCarloUserObject;
 class MonteCarloParticle;
 class MonteCarloBoundary;
+class ProbabilityMassFunction;
 
 template<>
 InputParameters validParams<MonteCarloUserObject>();
@@ -36,6 +37,9 @@ protected:
   /// Number of entries in _boundaries (for speed)
   unsigned int _num_boundaries;
 
+  /// Number of subdomains
+  unsigned int _num_subdomains;
+
   /// Planes for each boundary
   std::vector<MonteCarloBoundary *> _monte_carlo_boundaries;
 
@@ -47,6 +51,18 @@ protected:
 
   /// Absorption cross section
   std::vector<Real> _sigma_a;
+
+  /// Reaction probability mass functions for each subdomain
+  std::vector<ProbabilityMassFunction *> _subdomain_reaction_pmfs;
+
+  /// The subdomain that contains the source
+  unsigned int _source_subdomain;
+
+  /// The size of the source subdomain
+  Real _source_subdomain_size;
+
+  /// The beginning of the source subdomain
+  Real _source_subdomain_beginning;
 
   /**
    * Get the distance the particle is going to travel.

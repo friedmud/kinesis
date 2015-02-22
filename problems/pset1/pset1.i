@@ -36,9 +36,10 @@
   [./monte_carlo]
     type = MonteCarloUserObject
     execute_on = initial
-    num_particles = 4
+    num_particles = 400000000
     sigma_t = '1 1.5'
     boundaries = '0 2 6'
+    source_subdomain = 0
     sigma_a = '0.5 1.2'
   [../]
 []
@@ -61,4 +62,3 @@
   print_linear_residuals = true
   print_perf_log = true
 []
-
