@@ -22,6 +22,7 @@ InputParameters validParams<MonteCarloUserObject>()
   params.addRequiredParam<std::vector<Real> >("sigma_t", "Total cross section of each slab: slab1, slab2");
   params.addRequiredParam<std::vector<Real> >("sigma_a", "Absorption cross section of each slab: slab1, slab2");
   params.addRequiredParam<unsigned int>("source_subdomain", "The subdomain (starting at 0) containing the source");
+  params.addRequiredParam<unsigned int>("bins", "The number of tally bins");
 
   return params;
 }
@@ -39,7 +40,9 @@ MonteCarloUserObject::MonteCarloUserObject(const std::string & name, InputParame
     _subdomain_reaction_pmfs(_num_subdomains),
     _source_subdomain(getParam<unsigned int>("source_subdomain")),
     _source_subdomain_size(0),
-    _source_subdomain_beginning(0)
+    _source_subdomain_beginning(0),
+    _bins(getParam<unsigned int>("bins")),
+    _tally_grid(_boundaries[0], _boundaries[_num_boundaries - 1], _bins, _num_particles)
 {
   // Build boundary objects
   Point normal(1,0,0);
@@ -117,7 +120,7 @@ MonteCarloUserObject::execute()
 
     particle.setCurrentSubdomain(subdomainContainingPoint(particle.position()));
 
-    for (unsigned int j=0; j<20; j++)
+    for (unsigned int j=0; j<200; j++)
     {
       // Distance to move
       Real distance = computeDistance(particle);
@@ -206,10 +209,12 @@ MonteCarloUserObject::execute()
         // Determine reaction
         unsigned int reaction = _subdomain_reaction_pmfs[particle.currentSubdomain()]->getEvent(particle.nextRand());
 
-        // 0 is Collision... and we don't need to do anything
-
-        if (reaction == 1) // Absorption is 1
+        if (reaction == 0) // Collision is 0
+          _tally_grid.tallyCollision(new_position, 1, _sigma_t[particle.currentSubdomain()]);
+        else if (reaction == 1) // Absorption is 1
           break;
+        else
+          mooseError("Invalid reaction type!");
       }
     }
   }
@@ -217,6 +222,8 @@ MonteCarloUserObject::execute()
   auto t2 = std::chrono::high_resolution_clock::now();
 
   std::cout<<"Histories per second: "<<(Real)_num_particles / std::chrono::duration_cast<std::chrono::seconds>(t2-t1).count()<<std::endl;
+
+  _tally_grid.finalize();
 }
 
 

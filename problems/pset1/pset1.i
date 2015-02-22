@@ -41,6 +41,7 @@
     boundaries = '0 2 6'
     source_subdomain = 0
     sigma_a = '0.5 1.2'
+    bins = 100
   [../]
 []
 

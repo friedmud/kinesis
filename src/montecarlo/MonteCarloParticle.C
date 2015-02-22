@@ -2,7 +2,7 @@
 
 
 
-MonteCarloParticle::MonteCarloParticle(unsigned int id)
+MonteCarloParticle::MonteCarloParticle(unsigned long int id)
     : _id(id),
       _seed(id), // Start the seed with the particle ID
       _current_subdomain(Moose::INVALID_BLOCK_ID),

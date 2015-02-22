@@ -1,6 +1,9 @@
 #ifndef MONTECARLOUSEROBJECT_H
 #define MONTECARLOUSEROBJECT_H
 
+// Kinesis
+#include "TallyGrid.h"
+
 // Moose
 #include "GeneralUserObject.h"
 
@@ -63,6 +66,12 @@ protected:
 
   /// The beginning of the source subdomain
   Real _source_subdomain_beginning;
+
+  /// The number of tally bins
+  unsigned int _bins;
+
+  /// The tallying datastructure
+  TallyGrid _tally_grid;
 
   /**
    * Get the distance the particle is going to travel.

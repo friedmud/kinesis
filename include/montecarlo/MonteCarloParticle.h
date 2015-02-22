@@ -19,12 +19,12 @@ public:
    *
    * @param id The unique ID for this particle.
    */
-  MonteCarloParticle(unsigned int id);
+  MonteCarloParticle(unsigned long int id);
 
   /**
    * Get the ID for the particle
    */
-  unsigned int id();
+  unsigned long int id();
 
   /**
    * Get the current position.
@@ -89,7 +89,7 @@ public:
 private:
 
   /// The particle ID
-  unsigned int _id;
+  unsigned long int _id;
 
   /// The current position of the particle
   Point _position;
