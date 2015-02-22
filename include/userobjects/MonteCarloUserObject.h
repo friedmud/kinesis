@@ -1,11 +1,13 @@
 #ifndef MONTECARLOUSEROBJECT_H
 #define MONTECARLOUSEROBJECT_H
 
+// Moose
 #include "GeneralUserObject.h"
-#include "libmesh/fparser.hh"
 
 //Forward Declarations
 class MonteCarloUserObject;
+class MonteCarloParticle;
+class MonteCarloBoundary;
 
 template<>
 InputParameters validParams<MonteCarloUserObject>();
@@ -23,8 +25,55 @@ public:
   virtual void initialize() {};
   virtual void finalize() {};
 
-
 protected:
+
+  /// Total number of particles
+  unsigned int _num_particles;
+
+  /// Boundaries of the slabs
+  std::vector<Real> _boundaries;
+
+  /// Number of entries in _boundaries (for speed)
+  unsigned int _num_boundaries;
+
+  /// Planes for each boundary
+  std::vector<MonteCarloBoundary *> _monte_carlo_boundaries;
+
+  /// Boundaries connected to each subdomain
+  std::vector<std::vector<MonteCarloBoundary *> > _subdomain_boundaries;
+
+  /// Total cross section
+  std::vector<Real> _sigma_t;
+
+  /// Absorption cross section
+  std::vector<Real> _sigma_a;
+
+  /**
+   * Get the distance the particle is going to travel.
+   */
+  Real computeDistance(MonteCarloParticle & particle);
+
+  /**
+   * Get the mu
+   *
+   * @return Number between -1..1
+   */
+  Real computeMu(MonteCarloParticle & particle);
+
+  /**
+   * Get the phi (azimuthal angle)
+   *
+   * @return Number between 0 and 2*pi
+   */
+  Real computePhi(MonteCarloParticle & particle);
+
+  /**
+   * Get the subdomain the Point falls in.
+   *
+   * @param p The Point
+   * @return The subdomain.  Returns invalid_subdomain_id if outside of the domain.
+   */
+  SubdomainID subdomainContainingPoint(const Point & p);
 };
 
 #endif //MONTECARLOUSEROBJECT_H
