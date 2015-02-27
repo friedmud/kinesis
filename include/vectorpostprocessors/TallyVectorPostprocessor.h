@@ -38,7 +38,9 @@ public:
 protected:
   const MonteCarloUserObject & _monte_carlo_user_object;
 
+  VectorPostprocessorValue & _bin_centroids;
   VectorPostprocessorValue & _collision_rate;
+  VectorPostprocessorValue & _flux_tally;
   VectorPostprocessorValue & _mean;
   VectorPostprocessorValue & _variance;
 };

@@ -38,6 +38,11 @@ public:
   void finalize();
 
   /**
+   * Get the flux tallies
+   */
+  const std::vector<Real> & getFluxTallies() const { return _flux_tally; }
+
+  /**
    * Get the collision tallies
    */
   const std::vector<Real> & getCollisionTallies() const { return _collision_tally; }
@@ -51,6 +56,11 @@ public:
    * Get the variance
    */
   const std::vector<Real> & getVariance() const { return _variance; }
+
+  /**
+   * Get the centroids of each bin
+   */
+  const std::vector<Real> & getBinCentroids() const { return _bin_centroids; }
 
 protected:
   /// Beginning of the domain
@@ -77,6 +87,9 @@ protected:
   /// The total collision rate tally for all histories
   std::vector<Real> _collision_tally;
 
+  /// The total flux tally for all histories
+  std::vector<Real> _flux_tally;
+
   /// Number of collisions made by all particles
   std::vector<unsigned int> _total_collision_count;
 
@@ -91,6 +104,9 @@ protected:
 
   /// Variance
   std::vector<Real> _variance;
+
+  /// Centroid of each bin
+  std::vector<Real> _bin_centroids;
 
 private:
 

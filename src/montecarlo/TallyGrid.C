@@ -12,10 +12,12 @@ TallyGrid::TallyGrid(Real domain_beginning, Real domain_end, unsigned int bins, 
      _total_starting_weight(total_starting_weight),
      _num_histories(0),
      _collision_tally(_bins),
+     _flux_tally(_bins),
      _total_collision_count(_bins),
      _total_square_collision_count(_bins),
      _mean(_bins),
-     _variance(_bins)
+     _variance(_bins),
+     _bin_centroids(_bins)
 {
 }
 
@@ -25,7 +27,7 @@ TallyGrid::tallyCollision(const Point & p, Real weight, Real sigma_t)
 {
   unsigned int index = binIndex(p);
 
-  _collision_tally[index] += weight / sigma_t;
+  _flux_tally[index] += weight / sigma_t;
 
   _bin_to_hits[index] += 1;
 }
@@ -61,16 +63,20 @@ TallyGrid::endHistory()
 void
 TallyGrid::finalize()
 {
-  Real collision_divisor = 1/(_interval_size * _total_starting_weight);
+  Real flux_divisor = 1/(_interval_size * _total_starting_weight);
 
   for (unsigned int i=0; i<_bins; i++)
-    _collision_tally[i] *= collision_divisor;
+  {
+    _flux_tally[i] *= flux_divisor;
 
-  for (unsigned int i=0; i<_bins; i++)
     _mean[i] = (double)_total_collision_count[i] / (double)_num_histories;
 
-  for (unsigned int i=0; i<_bins; i++)
+    _collision_tally[i] = _mean[i] / _interval_size;
+
     _variance[i] = std::sqrt( (1/(double)(_num_histories - 1)) * ( ((double)_total_square_collision_count[i]/(double)_num_histories) - (_mean[i]*_mean[i]) ) );
+
+    _bin_centroids[i] = ( (i*_interval_size) + ( (i+1) * _interval_size ) ) / 2.0;
+  }
 }
 
 unsigned int

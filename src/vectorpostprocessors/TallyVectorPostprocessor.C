@@ -27,7 +27,9 @@ InputParameters validParams<TallyVectorPostprocessor>()
 TallyVectorPostprocessor::TallyVectorPostprocessor(const std::string & name, InputParameters parameters) :
     GeneralVectorPostprocessor(name, parameters),
     _monte_carlo_user_object(getUserObject<MonteCarloUserObject>("monte_carlo_userobject")),
+    _bin_centroids(declareVector("bin_centroids")),
     _collision_rate(declareVector("collision_rate")),
+    _flux_tally(declareVector("flux_tally")),
     _mean(declareVector("mean")),
     _variance(declareVector("variance"))
 {
@@ -42,7 +44,9 @@ TallyVectorPostprocessor::execute()
 {
   const TallyGrid & tally_grid = _monte_carlo_user_object.getTallyGrid();
 
+  _bin_centroids = tally_grid.getBinCentroids();
   _collision_rate = tally_grid.getCollisionTallies();
+  _flux_tally = tally_grid.getFluxTallies();
   _mean = tally_grid.getMean();
   _variance = tally_grid.getVariance();
 }
