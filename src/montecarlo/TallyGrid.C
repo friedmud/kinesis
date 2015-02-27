@@ -67,10 +67,10 @@ TallyGrid::finalize()
     _collision_tally[i] *= collision_divisor;
 
   for (unsigned int i=0; i<_bins; i++)
-    _mean[i] = _total_collision_count[i] / _num_histories;
+    _mean[i] = (double)_total_collision_count[i] / (double)_num_histories;
 
   for (unsigned int i=0; i<_bins; i++)
-    _variance[i] = std::sqrt( (1/(_num_histories - 1)) * ( (_total_square_collision_count[i]/_num_histories) - (_mean[i]*_mean[i]) ) );
+    _variance[i] = std::sqrt( (1/(double)(_num_histories - 1)) * ( ((double)_total_square_collision_count[i]/(double)_num_histories) - (_mean[i]*_mean[i]) ) );
 }
 
 unsigned int

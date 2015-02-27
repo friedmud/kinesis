@@ -215,7 +215,10 @@ MonteCarloUserObject::execute()
         if (reaction == 0) // Collision is 0
           _tally_grid.tallyCollision(new_position, 1, _sigma_t[particle.currentSubdomain()]);
         else if (reaction == 1) // Absorption is 1
+        {
+          _tally_grid.tallyCollision(new_position, 1, _sigma_t[particle.currentSubdomain()]);
           break;
+        }
         else
           mooseError("Invalid reaction type!");
       }

@@ -29,6 +29,8 @@ public:
   virtual void initialize() {};
   virtual void finalize() {};
 
+  const TallyGrid & getTallyGrid() const { return _tally_grid; }
+
 protected:
 
   /// Total number of particles

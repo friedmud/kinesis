@@ -32,6 +32,13 @@
   [../]
 []
 
+[VectorPostprocessors]
+  [./tallies]
+    type = TallyVectorPostprocessor
+    monte_carlo_userobject = monte_carlo
+  [../]
+[]
+
 [UserObjects]
   [./monte_carlo]
     type = MonteCarloUserObject
@@ -41,7 +48,7 @@
     boundaries = '0 2 6'
     source_subdomain = 0
     sigma_a = '0.5 1.2'
-    bins = 1000
+    bins = 120
   [../]
 []
 
@@ -59,7 +66,8 @@
 
 [Outputs]
   output_initial = true
-  exodus = true
+  exodus = false
+  csv = true
   print_linear_residuals = true
   print_perf_log = true
 []

@@ -6,6 +6,9 @@
 // UserObjects
 #include "MonteCarloUserObject.h"
 
+// VectorPostprocessors
+#include "TallyVectorPostprocessor.h"
+
 template<>
 InputParameters validParams<KinesisApp>()
 {
@@ -45,6 +48,8 @@ void
 KinesisApp::registerObjects(Factory & factory)
 {
   registerUserObject(MonteCarloUserObject);
+
+  registerVectorPostprocessor(TallyVectorPostprocessor);
 }
 
 void

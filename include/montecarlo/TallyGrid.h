@@ -37,6 +37,21 @@ public:
    */
   void finalize();
 
+  /**
+   * Get the collision tallies
+   */
+  const std::vector<Real> & getCollisionTallies() const { return _collision_tally; }
+
+  /**
+   * Get the mean
+   */
+  const std::vector<Real> & getMean() const { return _mean; }
+
+  /**
+   * Get the variance
+   */
+  const std::vector<Real> & getVariance() const { return _variance; }
+
 protected:
   /// Beginning of the domain
   Real _domain_beginning;
