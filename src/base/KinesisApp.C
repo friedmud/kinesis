@@ -1,7 +1,6 @@
 #include "KinesisApp.h"
 #include "Moose.h"
 #include "AppFactory.h"
-#include "ModulesApp.h"
 
 // UserObjects
 #include "MonteCarloUserObject.h"
@@ -25,11 +24,9 @@ KinesisApp::KinesisApp(const std::string & name, InputParameters parameters) :
   srand(processor_id());
 
   Moose::registerObjects(_factory);
-  ModulesApp::registerObjects(_factory);
   KinesisApp::registerObjects(_factory);
 
   Moose::associateSyntax(_syntax, _action_factory);
-  ModulesApp::associateSyntax(_syntax, _action_factory);
   KinesisApp::associateSyntax(_syntax, _action_factory);
 }
 
